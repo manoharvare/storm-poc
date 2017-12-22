@@ -4,7 +4,7 @@
 dependency-reduced-pom.xml
 logs/
 pom.xml
-src/
 storm-example.iml
 stormexample1.iml
 target/
+
