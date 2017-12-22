@@ -1,0 +1,10 @@
+# Created by .ignore support plugin (hsz.mobi)
+#.gitignore
+.idea/
+dependency-reduced-pom.xml
+logs/
+pom.xml
+src/
+storm-example.iml
+stormexample1.iml
+target/
