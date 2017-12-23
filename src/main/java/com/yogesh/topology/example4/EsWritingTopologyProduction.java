@@ -2,7 +2,6 @@ package com.yogesh.topology.example4;
 
 import com.yogesh.example4.spout.EsRandomDataGeneratorSpout;
 import org.apache.storm.Config;
-import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
 import org.apache.storm.generated.AlreadyAliveException;
 import org.apache.storm.generated.AuthorizationException;

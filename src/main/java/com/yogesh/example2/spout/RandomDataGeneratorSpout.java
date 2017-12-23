@@ -6,9 +6,10 @@ import org.apache.storm.topology.IRichSpout;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
-import static com.yogesh.util.StormUtil.*;
 
 import java.util.Map;
+
+import static com.yogesh.util.StormUtil.*;
 
 public class RandomDataGeneratorSpout implements IRichSpout {
 

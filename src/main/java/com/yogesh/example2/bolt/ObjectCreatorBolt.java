@@ -3,15 +3,12 @@ package com.yogesh.example2.bolt;
 import com.yogesh.example2.model.CustomerInfo;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
-import org.apache.storm.topology.IBasicBolt;
 import org.apache.storm.topology.IRichBolt;
-import org.apache.storm.topology.IWindowedBolt;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 public class ObjectCreatorBolt implements IRichBolt {
