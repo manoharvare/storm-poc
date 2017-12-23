@@ -17,8 +17,7 @@ import org.elasticsearch.storm.EsBolt;
 
 /**
  * @Author Yogesh Bombe
- * @ToDo
- * storm jar REAL-TIME-PROCESSING-POC-TOPOLOGY.jar
+ * @ToDo storm jar REAL-TIME-PROCESSING-POC-TOPOLOGY.jar
  * @classpath com.yogesh.topology.mongospoutesbolt.OpsLogProcessingTopologyProduction
  * @program-agruments OpsLogRealTimeProcessingTopology mongodb://localhost:27017/storm ssl mongodb://localhost:27017 storm.ssl localhost:9200 realtimeprocessing/docs 1 true
  */
@@ -55,6 +54,8 @@ public class OpsLogProcessingTopologyProduction {
         if (args.length > 0) {
             initializeInputParameter(args);
         }
+        BasicDBObject query = new BasicDBObject();
+        query.put("ns", OP_LOG_FILTER_NAMESPACE);
 
         MongoMapper mapper = new SimpleMongoMapper()
                 .withFields(FIELDS);
@@ -66,7 +67,7 @@ public class OpsLogProcessingTopologyProduction {
         TopologyBuilder builder = new TopologyBuilder();
         builder.setSpout(SPOUT, new EsMongoDataSourceSpout(), PARALLELISM_HINT);
         builder.setBolt(MONGO_BOLT, mongoBolt, PARALLELISM_HINT).shuffleGrouping(SPOUT);
-        builder.setSpout(MONGO_SPOUT, new MongoOpLogSpout(OP_LOG_URL, new BasicDBObject(), OP_LOG_FILTER_NAMESPACE), PARALLELISM_HINT);
+        builder.setSpout(MONGO_SPOUT, new MongoOpLogSpout(OP_LOG_URL, query, OP_LOG_FILTER_NAMESPACE), PARALLELISM_HINT);
         builder.setBolt(DATA_CLEANING_BOLT, new MongoObjectCleanerBolt(), PARALLELISM_HINT).shuffleGrouping(MONGO_SPOUT);
         builder.setBolt(ES_BOLT, new EsBolt(ES_INDEX_AND_TYPE), PARALLELISM_HINT).shuffleGrouping(DATA_CLEANING_BOLT);
         Config conf = new Config();

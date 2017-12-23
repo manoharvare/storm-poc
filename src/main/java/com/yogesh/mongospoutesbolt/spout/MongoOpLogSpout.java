@@ -68,6 +68,10 @@ public class MongoOpLogSpout extends MongoSpoutBase implements Serializable {
         Document targetDbObject;
         if (object != null) {
             String operation = object.get("op").toString();
+            // Verify if it's the correct namespace
+            if (this.filterByNamespace != null && !this.filterByNamespace.equals(object.get("ns").toString())) {
+                return;
+            }
             String objectId ;
             if (operation.equals("i")) {
                 targetDbObject = (Document) object.get("o");

@@ -28,6 +28,7 @@ public class OpsLogProcessingTopology {
 
   public static void main(String[] args) {
     BasicDBObject query = new BasicDBObject();
+    query.put("ns","storm.ssl");
     Config conf = new Config();
     conf.put("es.nodes", "localhost:9200");
     conf.setDebug(true);
@@ -43,7 +44,7 @@ public class OpsLogProcessingTopology {
     TopologyBuilder builder = new TopologyBuilder();
     builder.setSpout(SPOUT, new EsMongoDataSourceSpout(), 1);
     builder.setBolt(MONGO_BOLT, mongoBolt, 1).shuffleGrouping(SPOUT);
-    builder.setSpout(MONGO_SPOUT, new MongoOpLogSpout("mongodb://localhost:27017", query, "storm.realtimeprocessing"), 1);
+    builder.setSpout(MONGO_SPOUT, new MongoOpLogSpout("mongodb://localhost:27017", query, "storm.ssl"), 1);
     builder.setBolt(DATA_CLEANING_BOLT, new MongoObjectCleanerBolt(), 1).shuffleGrouping(MONGO_SPOUT);
     builder.setBolt(ES_BOLT, new EsBolt("realtimeprocessing/docs"), 1).shuffleGrouping(DATA_CLEANING_BOLT);
     LocalCluster localCluster = new LocalCluster();

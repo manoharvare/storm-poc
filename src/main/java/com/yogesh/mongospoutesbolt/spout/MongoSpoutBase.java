@@ -15,10 +15,7 @@ import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public abstract class MongoSpoutBase extends BaseRichSpout {
-    protected static MongoObjectGrabber wholeDocumentMapper;
     static Logger LOG = Logger.getLogger(MongoSpoutBase.class);
-
-
     protected MongoObjectGrabber mapper;
     protected Map conf;
     protected TopologyContext context;
@@ -35,7 +32,6 @@ public abstract class MongoSpoutBase extends BaseRichSpout {
         this.dbName = dbName;
         this.collectionNames = collectionNames;
         this.query = query;
-        this.mapper = mapper == null ? wholeDocumentMapper : mapper;
     }
 
     @Override
