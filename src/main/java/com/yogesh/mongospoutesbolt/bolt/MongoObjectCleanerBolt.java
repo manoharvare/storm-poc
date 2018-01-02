@@ -26,9 +26,9 @@ public class MongoObjectCleanerBolt implements IRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        String _id = tuple.getString(0);
-        String mongoObject = tuple.getString(1);
+        String mongoObject = tuple.getString(0);
         Document document = Document.parse(mongoObject);
+        System.out.println("Mongo-cleaner-bolt"+document.toJson());
         this.outputCollector.emit(new Values(
                 document.getString("sslId"),
                 document.getString("firstName"),
