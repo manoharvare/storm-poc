@@ -41,7 +41,7 @@ public class OpsLogProcessingTopology {
 
     // Build a topology
     TopologyBuilder builder = new TopologyBuilder();
-    /*builder.setSpout(SPOUT, new EsMongoDataSourceSpout(), 1);
+   /* builder.setSpout(SPOUT, new EsMongoDataSourceSpout(), 1);
     builder.setBolt(MONGO_BOLT, mongoBolt, 1).shuffleGrouping(SPOUT);*/
     builder.setSpout(MONGO_SPOUT, new MongoOpLogSpout("mongodb://localhost:37018", query, "debug.ssl"), 1);
     builder.setBolt(DATA_CLEANING_BOLT, new MongoObjectCleanerBolt(), 1).shuffleGrouping(MONGO_SPOUT);

@@ -119,7 +119,7 @@ public class MongoSpoutTask implements Callable<Boolean>, Runnable, Serializable
             if (this.filterByNamespace != null && !this.filterByNamespace.equals(object.get("ns").toString())) {
                 return null;
             }
-            String objectId;
+            Object objectId;
             if (operation.equals("i")) {
                 document = (Document) object.get("o");
             } else if (operation.equals("u")) {
@@ -128,7 +128,7 @@ public class MongoSpoutTask implements Callable<Boolean>, Runnable, Serializable
                 String database = parts[0], collection = parts[1];
                 System.out.println("update condition: Database->"+database+"& Collection->"+collection);
                 if (object.get("o2") != null && ((Document) object.get("o2")).get("_id") != null) {
-                    objectId = ((Document) object.get("o2")).get("_id").toString();
+                    objectId = ((Document) object.get("o2")).get("_id");
                     System.out.println("Getting documentId:->"+objectId);
                     document = getUpdatedDocument(objectId, database, collection);
                 }
@@ -142,7 +142,7 @@ public class MongoSpoutTask implements Callable<Boolean>, Runnable, Serializable
         return document;
     }
 
-    private Document getUpdatedDocument(String id, String dbName, String collectionName) {
+    private Document getUpdatedDocument(Object id, String dbName, String collectionName) {
         System.out.println("Processing Update operation");
         MongoDatabase database = mongoClient.getDatabase(dbName);
         System.out.println("Processing Db:->" + dbName);
