@@ -24,23 +24,29 @@ public class MongoSpoutTask implements Callable<Boolean>, Runnable, Serializable
     static Logger LOG = Logger.getLogger(MongoSpoutTask.class);
     FindIterable<Document> documents;
     private LinkedBlockingQueue<BasicDBObject> queue;
-    private static MongoClient mongoClient;
+    private MongoClient mongoClient;
     private MongoDatabase database;
     private MongoCollection<Document> collection;
     private MongoCursor<Document> cursor;
     private BasicDBObject query;
+    private String filterByNamespace;
 
     private AtomicBoolean running = new AtomicBoolean(true);
     private String[] collectionNames;
 
-    public MongoSpoutTask(){ }
+    public MongoSpoutTask() {
+    }
 
-    public MongoSpoutTask(LinkedBlockingQueue<BasicDBObject> queue, String url, String dbName, String[] collectionNames, BasicDBObject query) {
+    public MongoSpoutTask(LinkedBlockingQueue<BasicDBObject> queue, String url, String dbName, String[] collectionNames, BasicDBObject query, String filterByNamespace) {
         this.queue = queue;
         this.collectionNames = collectionNames;
         this.query = query;
-
+        this.filterByNamespace = filterByNamespace;
         initializeMongo(url, dbName);
+    }
+
+    private void initializeMongo(String url) {
+        mongoClient = new MongoClient(new MongoClientURI(url));
     }
 
     private void initializeMongo(String url, String dbName) {
@@ -52,7 +58,7 @@ public class MongoSpoutTask implements Callable<Boolean>, Runnable, Serializable
         running.set(false);
     }
 
-    @Override
+    /*@Override
     public Boolean call() throws Exception {
         String collectionName = locateValidOpCollection(collectionNames);
         if (collectionName == null)
@@ -74,18 +80,82 @@ public class MongoSpoutTask implements Callable<Boolean>, Runnable, Serializable
             }
         }
         return true;
+    }*/
+
+    @Override
+    public Boolean call() throws Exception {
+        System.out.println("Thread Stared");
+        String collectionName = locateValidOpCollection(collectionNames);
+        if (collectionName == null)
+            throw new Exception("Could not locate any of the collections provided or not capped collection");
+        collection = this.database.getCollection(collectionName);
+        documents = collection.find(query);
+        documents.noCursorTimeout(true).cursorType(CursorType.Tailable).maxAwaitTime(100, TimeUnit.SECONDS);
+        cursor = documents.iterator();
+        while (running.get()) {
+            try {
+                if (this.cursor.hasNext()) {
+                    if (LOG.isInfoEnabled()) LOG.info("Fetching a new item from MongoDB cursor");
+                    BasicDBObject object = new BasicDBObject(this.cursor.next());
+                    Document document = evaluateOperation(object);
+                    System.out.println(document.toJson());
+                    if (null != document)
+                        this.queue.put(new BasicDBObject(document));
+                } else {
+                    Thread.sleep(50);
+                }
+            } catch (Exception e) {
+                if (running.get()) throw new RuntimeException(e);
+            }
+        }
+        return true;
     }
 
-    public Document getUpdatedDocument(String id, String dbName, String collectionName) {
+    private Document evaluateOperation(BasicDBObject object) {
+        Document document = null;
+        if (object != null) {
+            String operation = object.get("op").toString();
+            // Verify if it's the correct namespace
+            if (this.filterByNamespace != null && !this.filterByNamespace.equals(object.get("ns").toString())) {
+                return null;
+            }
+            Object objectId;
+            if (operation.equals("i")) {
+                document = (Document) object.get("o");
+            } else if (operation.equals("u")) {
+                System.out.println("In update condition");
+                String[] parts = filterByNamespace.split("\\.", 2);
+                String database = parts[0], collection = parts[1];
+                System.out.println("update condition: Database->"+database+"& Collection->"+collection);
+                if (object.get("o2") != null && ((Document) object.get("o2")).get("_id") != null) {
+                    objectId = ((Document) object.get("o2")).get("_id");
+                    System.out.println("Getting documentId:->"+objectId);
+                    document = getUpdatedDocument(objectId, database, collection);
+                }
+            } else {
+
+            }
+
+        } else {
+            System.out.println("Empty Object");
+        }
+        return document;
+    }
+
+    private Document getUpdatedDocument(Object id, String dbName, String collectionName) {
+        System.out.println("Processing Update operation");
         MongoDatabase database = mongoClient.getDatabase(dbName);
-        MongoCollection<Document> sslCustomerApplication = database.getCollection(collectionName);
+        System.out.println("Processing Db:->" + dbName);
+        MongoCollection<Document> mongoCollection = database.getCollection(collectionName);
+        System.out.println("Processing Collection"+collectionName);
         BasicDBObject query = new BasicDBObject();
         query.put("_id", id);
-        FindIterable<Document> documents = sslCustomerApplication.find(query);
+        FindIterable<Document> documents = mongoCollection.find(query);
         MongoCursor<Document> iterator = documents.iterator();
-        Document doc =null;
-        while (iterator.hasNext()){
+        Document doc = null;
+        while (iterator.hasNext()) {
             doc = iterator.next();
+            System.out.println("Updated Doc" + doc.toJson());
         }
         return doc;
     }

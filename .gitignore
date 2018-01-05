@@ -3,7 +3,6 @@
 .idea/
 dependency-reduced-pom.xml
 logs/
-pom.xml
 storm-example.iml
 stormexample1.iml
 target/

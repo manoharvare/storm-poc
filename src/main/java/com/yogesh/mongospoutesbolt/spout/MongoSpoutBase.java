@@ -20,12 +20,13 @@ public abstract class MongoSpoutBase extends BaseRichSpout {
     protected Map conf;
     protected TopologyContext context;
     protected SpoutOutputCollector collector;
-    protected LinkedBlockingQueue<BasicDBObject> queue = new LinkedBlockingQueue<BasicDBObject>(10000);
+    protected LinkedBlockingQueue<BasicDBObject> queue = new LinkedBlockingQueue<BasicDBObject>(1);
     private String dbName;
     private BasicDBObject query;
     private String url;
     private MongoSpoutTask spoutTask;
     private String[] collectionNames;
+    private String filterByNamespace;
 
     public MongoSpoutBase(String url, String dbName, String[] collectionNames, BasicDBObject query, MongoObjectGrabber mapper) {
         this.url = url;
@@ -34,9 +35,17 @@ public abstract class MongoSpoutBase extends BaseRichSpout {
         this.query = query;
     }
 
+    public MongoSpoutBase(String url, String dbName, String[] collectionNames, BasicDBObject query, String filterByNamespace, MongoObjectGrabber mapper) {
+        this.url = url;
+        this.dbName = dbName;
+        this.collectionNames = collectionNames;
+        this.query = query;
+        this.filterByNamespace = filterByNamespace;
+    }
+
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("_id","document"));
+        declarer.declare(new Fields("document"));
     }
 
     @Override
@@ -44,7 +53,7 @@ public abstract class MongoSpoutBase extends BaseRichSpout {
         this.conf = conf;
         this.context = context;
         this.collector = collector;
-        this.spoutTask = new MongoSpoutTask(this.queue, this.url, this.dbName, this.collectionNames, this.query);
+        this.spoutTask = new MongoSpoutTask(this.queue, this.url, this.dbName, this.collectionNames, this.query, this.filterByNamespace);
         Thread thread = new Thread(this.spoutTask);
         thread.start();
     }
